@@ -149,7 +149,14 @@
   <ItemGroup>
     <ClInclude Include="jbmono.h" />
     <ClInclude Include="output_window.hpp" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="xout.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="xout.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\res\glasses.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

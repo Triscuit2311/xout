@@ -1,6 +1,8 @@
 #include "output_window.hpp"
 #include "jbmono.h"
 #include <dwmapi.h>
+
+#include "resource.h"
 #pragma comment(lib, "dwmapi.lib")
 
 bool output_window::ready_to_exit = false;
@@ -15,7 +17,7 @@ std::wostream& output_window::wcout() const
 	return *wcstream_;
 }
 
-output_window::output_window(HINSTANCE h_instance, const std::wstring& title, int width, int height) : h_instance_(h_instance), h_window_(nullptr), h_edit_(nullptr),
+output_window::output_window( const std::wstring& title, int width, int height) : h_window_(nullptr), h_edit_(nullptr),
 text_foreground_color_(RGB(255, 255, 255)), text_background_color_(RGB(0, 0, 0))
 {
 	LoadLibrary("Msftedit.dll");
@@ -27,6 +29,9 @@ text_foreground_color_(RGB(255, 255, 255)), text_background_color_(RGB(0, 0, 0))
 
 	cstream_ = std::make_unique<std::ostream>(buffer_a_.get());
 	wcstream_ = std::make_unique<std::wostream>(buffer_w_.get());
+
+	set_control_background_color(0x00000000);
+	set_window_title_bar_color(0x00000000);
 }
 
 output_window::~output_window()
@@ -47,6 +52,18 @@ void output_window::run_message_loop()
 		TranslateMessage(&msg);
 		DispatchMessageW(&msg);
 	}
+}
+
+void output_window::push_colors()
+{
+	backup_text_background_color_ = text_background_color_;
+	backup_text_foreground_color_ = text_foreground_color_;
+}
+
+void output_window::pop_colors()
+{
+	 text_background_color_ = backup_text_background_color_;
+	 text_foreground_color_ = backup_text_foreground_color_;
 }
 
 void output_window::set_text_bg(COLORREF color)
@@ -83,14 +100,14 @@ void output_window::set_window_title_text_color(COLORREF color) const
 	DwmSetWindowAttribute(h_window_, DWMWA_TEXT_COLOR, &color, sizeof(color));
 }
 
-std::shared_ptr<output_window> output_window::create_async(HINSTANCE h_instance, const std::wstring& title,
+std::shared_ptr<output_window> output_window::create_async( const std::wstring& title,
 	int width, int height, int n_cmd_show)
 {
 	std::promise<std::shared_ptr<output_window>> promise;
 	auto future = promise.get_future();
-	std::thread([h_instance, title, width, height, n_cmd_show, p = std::move(promise)]() mutable
+	std::thread([ title, width, height, n_cmd_show, p = std::move(promise)]() mutable
 		{
-			auto console = std::make_shared<output_window>(h_instance, title, width, height);
+			auto console = std::make_shared<output_window>(title, width, height);
 			p.set_value(console);
 			console->show(n_cmd_show);
 			console->run_message_loop();
@@ -161,8 +178,9 @@ void output_window::register_window_class()
 {
 	WNDCLASSW wc = {};
 	wc.lpfnWndProc = output_window::window_proc;
-	wc.hInstance = h_instance_;
+	wc.hInstance = nullptr;
 	wc.lpszClassName = k_window_class_name;
+	wc.hIcon = (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 48, 48, 0);
 	RegisterClassW(&wc);
 }
 
@@ -170,13 +188,22 @@ void output_window::create_window(const std::wstring& title, int width, int heig
 {
 	h_window_ = CreateWindowExW(0, k_window_class_name, title.c_str(), WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT, width, height,
-		nullptr, nullptr, h_instance_, this);
+		nullptr, nullptr, nullptr, this);
 }
 
 void output_window::create_edit_control()
 {
 	h_edit_ = CreateWindowExW(0, L"RichEdit50W", L"",
 		WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL,
-		0, 0, xout::width, xout::height, h_window_, nullptr, h_instance_, nullptr);
+		0, 0, xout::width, xout::height, h_window_, nullptr, nullptr, nullptr);
 	set_font(h_edit_);
+
+
+	PARAFORMAT2 pf = {};
+	pf.cbSize = sizeof(PARAFORMAT2);
+	pf.dwMask = PFM_LINESPACING;
+	pf.dyLineSpacing = 250;
+	pf.bLineSpacingRule = 4;
+	pf.wAlignment = PFA_LEFT;
+	SendMessageW(h_edit_, EM_SETPARAFORMAT, 0, (LPARAM)&pf);
 }

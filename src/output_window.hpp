@@ -12,8 +12,8 @@
 
 namespace xout
 {
-	constexpr int height = 300;
-	constexpr int width = 500;
+	constexpr int height = 480;
+	constexpr int width = 640;
 }
 
 class edit_control_buffer_w final : public std::wstreambuf
@@ -129,7 +129,6 @@ private:
 class output_window
 {
 	static constexpr const wchar_t* k_window_class_name = L"xout_output_cls";
-	HINSTANCE h_instance_;
 	HWND h_window_;
 	HWND h_edit_;
 	std::unique_ptr<edit_control_buffer_a> buffer_a_;
@@ -137,12 +136,16 @@ class output_window
 
 	COLORREF text_foreground_color_;
 	COLORREF text_background_color_;
+
+	COLORREF backup_text_foreground_color_;
+	COLORREF backup_text_background_color_;
+
 	std::unique_ptr<std::ostream> cstream_;
 	std::unique_ptr<std::wostream> wcstream_;
 
 	static HFONT set_font(const HWND h_edit);
 	static LRESULT CALLBACK window_proc(HWND h_wnd, UINT message, WPARAM w_param, LPARAM l_param);
-	void register_window_class();
+	static void register_window_class();
 	void create_window(const std::wstring& title, int width, int height);
 	void create_edit_control();
 
@@ -152,7 +155,7 @@ public:
 	std::ostream& cout() const;
 	std::wostream& wcout() const;
 
-	explicit output_window(HINSTANCE h_instance, const std::wstring& title = L"xout", int width = xout::width,
+	explicit output_window( const std::wstring& title = L"xout", int width = xout::width,
 	                       int height = xout::height);
 
 	~output_window();
@@ -160,6 +163,10 @@ public:
 	void show(int n_cmd_show) const;
 
 	static void run_message_loop();
+
+	void push_colors();
+	void pop_colors();
+
 
 	void set_text_bg(COLORREF color);
 
@@ -175,7 +182,6 @@ public:
 
 
 	static std::shared_ptr<output_window> create_async(
-		HINSTANCE h_instance,
 		const std::wstring& title = L"xout",
 		int width = xout::width,
 		int height = xout::height,
