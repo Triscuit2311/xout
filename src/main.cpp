@@ -1,9 +1,7 @@
 ﻿#include <Windows.h>
 #include "xout.hpp"
 
-int APIENTRY wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int)
-{
-
+int APIENTRY wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int){
     // Not explicitly needed, will init on first print
     xout::init(); Sleep(1000);
 
@@ -17,20 +15,16 @@ int APIENTRY wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int)
     xout::warning(L"{1:<7} {0:>6}", L"世界!", L"你好,"); Sleep(250);
     xout::error("{1:<7} {0:>6}", "An ERROR!", "AH,"); Sleep(250);
 
-
     // Supports std::string and std::wstring as well
     std::wstring crit = L"CRITICAL ERROR! LIMIT BREAK!!";
     xout::critical(crit); Sleep(250);
-
 
     // Send custom messages as well!
     std::wstring custom_msg = L"DANGER TO MANIFOLD!";
     xout::custom(custom_msg, L"!", 0x000000, 0xDC6626);
 
     // Returns true once xout window is closed
-    while (!xout::should_exit()) 
-    {
+    while (!xout::should_exit()) {
         Sleep(1000);
     }
-
 }
