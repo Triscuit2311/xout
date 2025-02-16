@@ -2,7 +2,10 @@
 #include <cstdint>
 #include <Windows.h>
 #include <format>
+#include <queue>
+
 #include "output_window.hpp"
+#include "..\shared\shem.hpp"
 
 
 #if !_HAS_CXX20
@@ -88,7 +91,8 @@ namespace xout
 
 				_internal::out_wnd->pop_colors();
 			}
-			void prefix(log_level lvl)
+
+			void prefix(log_level lvl,  bool no_flush = false)
 			{
 				if (_internal::out_wnd == nullptr) { return; }
 
@@ -131,9 +135,12 @@ namespace xout
 				_internal::out_wnd->set_text_bg(text_bg);
 				_internal::out_wnd->set_text_fg(text_fg);
 
-				_internal::out_wnd->wcout() << prefix << L" ▪ ";
-				_internal::out_wnd->wcout().flush();
 
+				_internal::out_wnd->wcout() << prefix << L" ▪ ";
+				if (!no_flush) {
+					_internal::out_wnd->wcout().flush();
+				}
+				
 				_internal::out_wnd->pop_colors();
 
 			}
@@ -173,10 +180,70 @@ namespace xout
 				_internal::out_wnd->wcout().flush();
 				_internal::out_wnd->pop_colors();
 			}
+
+
+
+			void server_marshall(const std::string& str, log_level lvl, bool first, bool last)
+			{
+				if (_internal::out_wnd == nullptr) { return; }
+
+				if (first) {
+					prefix(lvl);
+				}
+
+				if (lvl == critical){
+					_internal::out_wnd->push_colors();
+					_internal::out_wnd->set_text_bg(colors::critical_bg);
+					_internal::out_wnd->set_text_fg(colors::critical_fg);
+					put(str);
+					_internal::out_wnd->pop_colors();
+				}else
+				{
+					put(str);
+				}
+
+				if (last)
+				{
+					if (!str.ends_with('\n')) {
+						put("\n");
+					}
+				}
+			}
+
+			void server_marshall(const std::wstring& str, log_level lvl, bool first, bool last)
+			{
+				if (_internal::out_wnd == nullptr) { return; }
+
+				if (first) {
+					prefix(lvl);
+				}
+
+				if (lvl == critical) {
+					_internal::out_wnd->push_colors();
+					_internal::out_wnd->set_text_bg(colors::critical_bg);
+					_internal::out_wnd->set_text_fg(colors::critical_fg);
+					put(str);
+					_internal::out_wnd->pop_colors();
+				}
+				else
+				{
+					put(str);
+				}
+
+				if (last)
+				{
+					if (!str.ends_with(L'\n')) {
+						put(L"\n");
+					}
+				}
+			}
+
+
 		};
 
 		inline std::shared_ptr<_internal::xout_output> output = nullptr;
 	}
+
 
 	inline bool init()
 	{
@@ -474,17 +541,8 @@ namespace xout
 	}
 
 
-
 	inline bool should_exit()
 	{
 		return output_window::ready_to_exit;
 	}
-
-	namespace server
-	{
-		void listen()
-		{
-			
-		}
 	}
-}

@@ -147,10 +147,12 @@
     <ClCompile Include="output_window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\shem.hpp" />
     <ClInclude Include="jbmono.h" />
     <ClInclude Include="output_window.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="xout.hpp" />
+    <ClInclude Include="xout_server.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="xout.rc" />
