@@ -18,7 +18,7 @@ Features:
 - Full RGB Color support
 - Simple and sensible defaults.
 
-![Example](img\preview.png)
+![Example](preview.png)
 
 
 
